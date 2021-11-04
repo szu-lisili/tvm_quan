@@ -21,5 +21,6 @@ c = tvm.nd.array(np.zeros(n, dtype=C.dtype), dev)
 fadd(a, b, c)
 tvm.testing.assert_allclose(c.numpy(), a.numpy() + b.numpy())
 
+
 if __name__ == '__main__':
     print("test")
