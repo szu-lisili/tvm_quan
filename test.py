@@ -3,7 +3,9 @@ import tvm.testing
 from tvm import te
 import numpy as np
 
-tgt = tvm.target.Target('cuda')
+# tgt = tvm.target.Target()
+TARGET_NAME = 'cuda'
+CTX = tvm.context(TARGET_NAME, 0)
 
 n = te.var("n")
 A = te.placeholder((n,), name="A")
@@ -13,7 +15,7 @@ C = te.compute(A.shape, lambda i: A[i] + B[i], name="C")
 
 s = te.create_schedule(C.op)
 
-fadd = tvm.build(s, [A, B, C], tgt, name="myadd")
+fadd = tvm.build(s, [A, B, C], target=TARGET_NAME, name="myadd")
 
 dev = tvm.device(tgt.kind.name, 0)
 
