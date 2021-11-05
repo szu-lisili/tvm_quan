@@ -1,6 +1,7 @@
 import tvm
 from tvm import relay
 from tvm import autotvm
+import tvm.contrib.util as util
 import numpy as np
 tgt = tvm.target.Target(target="llvm", host="llvm")
 
@@ -21,3 +22,11 @@ y = relay.nn.conv2d(x, w, data_layout='NHWC', kernel_size=[1, 1], channels=32, k
 y_func = relay.Function([x, w], y)
 
 print(y_func.body)
+params = {'w': w_np}
+with relay.build_config(opt_level=3):
+    graph, lib, params = relay.build_module.build(y_func, target=target, params=params)
+
+
+tmp = util.tempdir()
+lib_fname = tmp.relpath('net.tar')
+lib.export_library(lib_fname)
