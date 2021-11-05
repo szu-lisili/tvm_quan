@@ -1,9 +1,6 @@
 import tvm
 from tvm import relay
 from tvm import autotvm
-import tvm.contrib.graph_runtime as runtime
-from tvm.contrib import util
-from tvm.contrib.util import tempdir
 import numpy as np
 tgt = tvm.target.Target(target="llvm", host="llvm")
 
