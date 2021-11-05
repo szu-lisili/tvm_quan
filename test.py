@@ -3,7 +3,7 @@ import tvm.testing
 from tvm import te
 import numpy as np
 
-tgt = tvm.target.Target(target="cuda", host="llvm")
+tgt = tvm.target.Target(target="llvm", host="llvm")
 
 n = te.var("n")
 A = te.placeholder((n,), name="A")
