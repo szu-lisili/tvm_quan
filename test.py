@@ -15,8 +15,10 @@ s = te.create_schedule(C.op)
 
 fadd = tvm.build(s, [A, B, C], tgt, name="myadd")
 
-dev = tvm.device(tgt.kind.name, 0)
+print(tgt.kind.name)
 
+dev = tvm.device(tgt.kind.name, 0)
+print(dev)
 n = 1024
 a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), dev)
 b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), dev)
