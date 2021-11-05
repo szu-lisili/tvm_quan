@@ -13,7 +13,7 @@ C = te.compute(A.shape, lambda i: A[i] + B[i], name="C")
 
 s = te.create_schedule(C.op)
 
-fadd = tvm.build(s, [A, B, C], tgt, name="myadd")
+fadd = tvm.build(s, [A, B, C], "cuda", name="myadd")
 
 dev = tvm.device(tgt.kind.name, 0)
 
