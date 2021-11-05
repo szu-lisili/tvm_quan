@@ -24,7 +24,7 @@ y_func = relay.Function([x, w], y)
 print(y_func.body)
 params = {'w': w_np}
 with relay.build_config(opt_level=3):
-    graph, lib, params = relay.build_module.build(y_func, target=target, params=params)
+    graph, lib, params = relay.build_module.build(y_func, target=tgt, params=params)
 
 
 tmp = util.tempdir()
