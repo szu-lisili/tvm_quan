@@ -3,9 +3,7 @@ import tvm.testing
 from tvm import te
 import numpy as np
 
-# tgt = tvm.target.Target()
-TARGET_NAME = 'cuda'
-CTX = tvm.context(TARGET_NAME, 0)
+tgt = tvm.target.Target(target="llvm", host="llvm")
 
 n = te.var("n")
 A = te.placeholder((n,), name="A")
@@ -15,7 +13,7 @@ C = te.compute(A.shape, lambda i: A[i] + B[i], name="C")
 
 s = te.create_schedule(C.op)
 
-fadd = tvm.build(s, [A, B, C], target=TARGET_NAME, name="myadd")
+fadd = tvm.build(s, [A, B, C], tgt, name="myadd")
 
 dev = tvm.device(tgt.kind.name, 0)
 
@@ -26,6 +24,3 @@ c = tvm.nd.array(np.zeros(n, dtype=C.dtype), dev)
 fadd(a, b, c)
 tvm.testing.assert_allclose(c.numpy(), a.numpy() + b.numpy())
 
-
-if __name__ == '__main__':
-    print("test")
