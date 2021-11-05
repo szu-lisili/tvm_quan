@@ -1,7 +1,7 @@
 import tvm
 from tvm import relay
 from tvm import autotvm
-import tvm.contrib.util as util
+import tvm.contrib.utils as utils
 import numpy as np
 tgt = tvm.target.Target(target="llvm", host="llvm")
 
