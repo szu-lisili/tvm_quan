@@ -1,59 +1,26 @@
 import tvm
-import tvm.testing
-from tvm import te
+from tvm import relay
+from tvm import autotvm
+import tvm.contrib.graph_runtime as runtime
+from tvm.contrib import util
+from tvm.contrib.util import tempdir
 import numpy as np
-
 tgt = tvm.target.Target(target="llvm", host="llvm")
 
-n = te.var("n")
-A = te.placeholder((n,), name="A")
-B = te.placeholder((n,), name="B")
-C = te.compute(A.shape, lambda i: A[i] + B[i], name="C")
 
+x = relay.var('x', shape=[1, 224, 224, 32], dtype='int16')
+#w = relay.var('w', shape=[32, 32, 3, 3], dtype='int16')
+#w_np = np.random.normal(size=[32, 32, 3, 3]).astype('float32').astype('int16')
+w = relay.var('w', shape=[1, 1, 32, 32], dtype='int16')
+#w = relay.var('w', dtype='int16')
+w_np = np.random.normal(size=[1, 1, 32, 32]).astype('int16')
+x_np = np.random.normal(size=[1, 224, 224, 32]).astype('int16')
 
-s = te.create_schedule(C.op)
+#y = relay.nn.conv2d(x, w, data_layout='NHWC', kernel_size=[3, 3], kernel_layout='OIHW')
+bpw = relay.nn.bitpack(w, bit_axis=2, pack_axis=2, bits=1, pack_type='uint8')
+#bpw = relay.nn.bitpack(w, bits=1, pack_axis=2, bit_axis=4, pack_type='uint8')
+#y = relay.nn.bitserial_conv2d(x, bpw, data_layout='NHWC', kernel_size=[1, 1], channels=32, pack_dtype='uint8', kernel_layout='HWIO')
+y = relay.nn.conv2d(x, w, data_layout='NHWC', kernel_size=[1, 1], channels=32, kernel_layout='HWIO')
+y_func = relay.Function([x, w], y)
 
-fadd = tvm.build(s, [A, B, C], tgt, name="myadd")
-
-print(tgt.kind.name)
-
-dev = tvm.device(tgt.kind.name, 0)
-print(dev)
-n = 1024
-a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), dev)
-b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), dev)
-c = tvm.nd.array(np.zeros(n, dtype=C.dtype), dev)
-fadd(a, b, c)
-tvm.testing.assert_allclose(c.numpy(), a.numpy() + b.numpy())
-
-import timeit
-
-np_repeat = 100
-np_running_time = timeit.timeit(
-    setup="import numpy\n"
-    "n = 32768\n"
-    'dtype = "float32"\n'
-    "a = numpy.random.rand(n, 1).astype(dtype)\n"
-    "b = numpy.random.rand(n, 1).astype(dtype)\n",
-    stmt="answer = a + b",
-    number=np_repeat,
-)
-print("Numpy running time: %f" % (np_running_time / np_repeat))
-
-
-def evaluate_addition(func, target, optimization, log):
-    dev = tvm.device(target.kind.name, 0)
-    n = 32768
-    a = tvm.nd.array(np.random.uniform(size=n).astype(A.dtype), dev)
-    b = tvm.nd.array(np.random.uniform(size=n).astype(B.dtype), dev)
-    c = tvm.nd.array(np.zeros(n, dtype=C.dtype), dev)
-
-    evaluator = func.time_evaluator(func.entry_name, dev, number=10)
-    mean_time = evaluator(a, b, c).mean
-    print("%s: %f" % (optimization, mean_time))
-
-    log.append((optimization, mean_time))
-
-
-log = [("numpy", np_running_time / np_repeat)]
-evaluate_addition(fadd, tgt, "naive", log=log)
+print(y_func.body)
